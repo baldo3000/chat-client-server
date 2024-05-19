@@ -19,6 +19,8 @@ def receive():
                 on_closing()
                 break
         except OSError as e:
+            client_socket = None
+            on_closing()
             break
 
         
