@@ -4,6 +4,7 @@ from threading import Thread
 import tkinter as tkt
 
 
+#function to broadcast messages to all clients, excluding some if needed
 def broadcast(msg, prefix='', exclusions=[]):
     complete_msg = prefix + ": " + msg
     print_on_console(complete_msg)
@@ -12,6 +13,7 @@ def broadcast(msg, prefix='', exclusions=[]):
             client_socket.send(bytes(complete_msg, "utf8"))
 
 
+#function to close a client connection and inform all other clients
 def close_client(client_socket):
     broadcast(f"{clients[client_socket]} has left the chat.", exclusions=[client_socket])
     client_socket.close()
@@ -19,6 +21,7 @@ def close_client(client_socket):
     del addresses[client_socket]
 
 
+#function to handle a client connection, client threads cicles here
 def handle_client(client_socket):
     client_name = client_socket.recv(buffersize).decode("utf8")
     clients[client_socket] = client_name
@@ -37,13 +40,14 @@ def handle_client(client_socket):
             else:
                 close_client(client_socket)
                 break
-        except ConnectionResetError:
+        except ConnectionResetError: #in case the client closed the connection
             close_client(client_socket)
             break
-        except ConnectionAbortedError:
+        except ConnectionAbortedError: #in case the server was closed
             break   
  
-           
+
+#function to handle the server main thread, the one who accepts new connections           
 def main_loop():
     while True:
         try:
@@ -54,7 +58,7 @@ def main_loop():
         except OSError as e:
             break
 
-
+#function to close the server and all client connections
 def on_closing():
     for client_socket in clients:
         client_socket.send(bytes(r"{quit}", "utf8"))
@@ -62,12 +66,12 @@ def on_closing():
     server_socket.close()
     window.quit()
 
-    
+
+#function to print messages on the GUI console    
 def print_on_console(msg):
     msg_list.insert(tkt.END, msg)
     msg_list.yview(tkt.END)
-    #print the message on the console as a backup in case GUI doesn't work
-    print(msg)
+    print(msg) #prints the message on the console as a backup in case GUI doesn't work
 
 
 clients = {}

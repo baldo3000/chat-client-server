@@ -5,12 +5,14 @@ from threading import Thread
 import tkinter as tkt
 
 
+#function to receive messages from server
 def receive():
     global client_socket
     while True:
         try:
             msg = client_socket.recv(buffersize).decode("utf8")
             print("Receiving message:", msg)
+            #captures signal from server to close connection
             if msg != r"{quit}":
                 msg_list.insert(tkt.END, msg)
             else:
@@ -23,7 +25,8 @@ def receive():
             on_closing()
             break
 
-        
+
+#function to send messages to server        
 def send(event=None):
     msg = my_msg.get()
     my_msg.set("")
@@ -35,12 +38,14 @@ def send(event=None):
     else: 
         window.quit()
 
-        
+
+#function to close the connection (tries first to inform the server if it is still connected)        
 def on_closing(event=None):
     my_msg.set("{quit}")
     send()
 
 
+#function to start the chat gui
 def chat_gui():
     chat_frame = tkt.Frame(window)
     global msg_list
@@ -58,6 +63,7 @@ def chat_gui():
     chat_frame.pack()
 
 
+#function to connect to the server
 def connect(server_ip, server_port, username):
     #a new socket is created each time so that after a timeout there is no waiting time to try to reconnect
     global client_socket
@@ -75,7 +81,7 @@ def connect(server_ip, server_port, username):
         server_port = int(server_port)
     if username == '':
         
-        username = 'User' + str(random.randint(0, 1000))
+        username = 'User' + str(random.randint(0, 1000)) #random username number
     else:
         username = username
         
@@ -99,8 +105,6 @@ def connect(server_ip, server_port, username):
 #init
 buffersize = 1024
 client_socket = None
-
-#tkt window
 window = tkt.Tk()
 server_ip = tkt.StringVar()
 server_port = tkt.StringVar()
