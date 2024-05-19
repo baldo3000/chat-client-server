@@ -9,6 +9,12 @@ def broadcast(msg, prefix='', exclusions=[]):
             print(f"Broadcasting message: {complete_msg}")
             client_socket.send(bytes(complete_msg, "utf8"))
 
+def close_client(client_socket):
+    broadcast(f"{clients[client_socket]} has left the chat.", exclusions=[client_socket])
+    client_socket.close()
+    del clients[client_socket]
+    del addresses[client_socket]
+
 def handle_client(client_socket):
     client_name = client_socket.recv(buffersize).decode("utf8")
     clients[client_socket] = client_name
@@ -20,17 +26,18 @@ def handle_client(client_socket):
     broadcast(broadcast_message, exclusions=[client_socket])
 
     while True:
-        msg = client_socket.recv(buffersize)
-        print(f"Received message from {client_name}: {msg}")
-        if msg != bytes("{quit}", "utf8"):
-            broadcast(msg.decode("utf8"), prefix=client_name)
-        else:
-            client_socket.close()
-            del clients[client_socket]
-            del addresses[client_socket]
-            broadcast(f"{client_name} has left the chat.")
-            break
-
+        try:
+            msg = client_socket.recv(buffersize)
+            print(f"Received message from {client_name}: {msg}")
+            if msg != bytes("{quit}", "utf8"):
+                broadcast(msg.decode("utf8"), prefix=client_name)
+            else:
+                close_client(client_socket)
+                break
+        except ConnectionResetError as e:
+            close_client(client_socket)
+            break   
+            
 def main_loop():
     while True:
         client_socket, client_ip = server_socket.accept()

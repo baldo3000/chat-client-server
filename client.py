@@ -8,18 +8,19 @@ def receive():
     while True:
         try:
             msg = client_socket.recv(buffersize).decode("utf8")
-            print("Received message: ", msg)
             msg_list.insert(tkt.END, msg)
         except OSError as e:
             break
         
 def send(event=None):
     msg = my_msg.get()
-    print("Sending message: ", msg)
     my_msg.set("")
-    client_socket.send(bytes(msg, "utf8"))
-    if msg == "{quit}":
-        client_socket.close()
+    if client_socket is not None:
+        client_socket.send(bytes(msg, "utf8"))
+        if msg == r"{quit}":
+            client_socket.close()
+            window.quit()   
+    else: 
         window.quit()
         
 def on_closing(event=None):
@@ -27,7 +28,6 @@ def on_closing(event=None):
     send()
 
 def chat_gui():
-    print("Creating chat gui...")   
     chat_frame = tkt.Frame(window)
     global msg_list
     scrollbar = tkt.Scrollbar(chat_frame)
@@ -42,7 +42,7 @@ def chat_gui():
     #loads the chat gui and hides the start page
     start_frame.pack_forget()
     chat_frame.pack()
-    
+
 def connect(server_ip, server_port, username):
     #a new socket is created each time so that after a timeout there is no waiting time to try to reconnect
     global client_socket
@@ -64,7 +64,7 @@ def connect(server_ip, server_port, username):
     else:
         username = username
         
-    print("Connecting to server at: ", server_ip, ":", server_port, "...")
+    print("Connecting to server at: ", server_ip, ":", server_port)
     try:
         client_socket.connect((server_ip, server_port))
         client_socket.settimeout(None)
@@ -88,7 +88,6 @@ server_ip = tkt.StringVar()
 server_port = tkt.StringVar()
 username = tkt.StringVar()
 my_msg = tkt.StringVar()
-#msg_list = tkt.Listbox(height=15, width=80)
 msg_list = None #global but not created yet
 window.title("Chat")
 window.protocol("WM_DELETE_WINDOW", on_closing)
