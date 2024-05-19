@@ -4,13 +4,14 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import tkinter as tkt
 
+
 def receive():
     global client_socket
     while True:
         try:
             msg = client_socket.recv(buffersize).decode("utf8")
             print("Receiving message:", msg)
-            if(msg != r"{quit}"):
+            if msg != r"{quit}":
                 msg_list.insert(tkt.END, msg)
             else:
                 print("Closing connection")
@@ -19,6 +20,7 @@ def receive():
                 break
         except OSError as e:
             break
+
         
 def send(event=None):
     msg = my_msg.get()
@@ -30,10 +32,12 @@ def send(event=None):
             window.quit()
     else: 
         window.quit()
+
         
 def on_closing(event=None):
     my_msg.set("{quit}")
     send()
+
 
 def chat_gui():
     chat_frame = tkt.Frame(window)
@@ -50,6 +54,7 @@ def chat_gui():
     #loads the chat gui and hides the start page
     start_frame.pack_forget()
     chat_frame.pack()
+
 
 def connect(server_ip, server_port, username):
     #a new socket is created each time so that after a timeout there is no waiting time to try to reconnect
@@ -87,6 +92,7 @@ def connect(server_ip, server_port, username):
         #destroy the unsuccesful socket 
         client_socket = None
         return
+
 
 #init
 buffersize = 1024

@@ -3,6 +3,7 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import tkinter as tkt
 
+
 def broadcast(msg, prefix='', exclusions=[]):
     complete_msg = prefix + ": " + msg
     print_on_console(complete_msg)
@@ -10,11 +11,13 @@ def broadcast(msg, prefix='', exclusions=[]):
         if client_socket not in exclusions:
             client_socket.send(bytes(complete_msg, "utf8"))
 
+
 def close_client(client_socket):
     broadcast(f"{clients[client_socket]} has left the chat.", exclusions=[client_socket])
     client_socket.close()
     del clients[client_socket]
     del addresses[client_socket]
+
 
 def handle_client(client_socket):
     client_name = client_socket.recv(buffersize).decode("utf8")
@@ -39,7 +42,8 @@ def handle_client(client_socket):
             break
         except ConnectionAbortedError:
             break   
-            
+ 
+           
 def main_loop():
     while True:
         try:
@@ -50,18 +54,21 @@ def main_loop():
         except OSError as e:
             break
 
+
 def on_closing():
     for client_socket in clients:
         client_socket.send(bytes(r"{quit}", "utf8"))
         client_socket.close()
     server_socket.close()
     window.quit()
+
     
 def print_on_console(msg):
     msg_list.insert(tkt.END, msg)
     msg_list.yview(tkt.END)
     #print the message on the console as a backup in case GUI doesn't work
     print(msg)
+
 
 clients = {}
 addresses = {}
