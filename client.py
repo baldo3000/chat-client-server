@@ -7,24 +7,24 @@ import tkinter as tkt
 
 #function to receive messages from server
 def receive():
-    global client_socket
     while True:
         try:
             msg = client_socket.recv(buffersize).decode("utf8")
             print("Receiving message:", msg)
-            #captures signal from server to close connection
-            if msg != r"{quit}":
-                msg_list.insert(tkt.END, msg)
-            else:
+            if msg == r"{quit}": #server closes
                 print("Closing connection")
-                client_socket = None
-                on_closing()
+                client_socket.close()
+                window.after(0, window.quit())
                 break
-        except OSError as e:
-            client_socket = None
-            on_closing()
+            else:
+                msg_list.insert(tkt.END, msg)
+        except ConnectionAbortedError: #client disconnects
             break
-
+        except ConnectionResetError: #server crashes
+            client_socket.close()
+            window.after(0, window.quit())
+            break
+        
 
 #function to send messages to server        
 def send(event=None):

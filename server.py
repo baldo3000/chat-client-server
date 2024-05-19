@@ -102,6 +102,7 @@ if __name__ == "__main__":
     msg_list = tkt.Listbox(frame, height=15, width=80, yscrollcommand=scrollbar.set)
     msg_list.pack(side=tkt.LEFT, fill=tkt.BOTH)
     frame.pack()
+    print_on_console("Server is open at " + server_ip + ":" + str(server_port) + " waiting for connections...")
     tkt.mainloop()
     server_thread.join()
     server_socket.close()
