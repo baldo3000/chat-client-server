@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
+import tkinter as tkt
 
 def broadcast(msg, prefix='', exclusions=[]):
+    complete_msg = prefix + ": " + msg
+    print_on_console(complete_msg)
     for client_socket in clients:
         if client_socket not in exclusions:
-            complete_msg = prefix + ": " + msg
-            print(f"Broadcasting message: {complete_msg}")
             client_socket.send(bytes(complete_msg, "utf8"))
 
 def close_client(client_socket):
@@ -28,22 +29,39 @@ def handle_client(client_socket):
     while True:
         try:
             msg = client_socket.recv(buffersize)
-            print(f"Received message from {client_name}: {msg}")
             if msg != bytes("{quit}", "utf8"):
                 broadcast(msg.decode("utf8"), prefix=client_name)
             else:
                 close_client(client_socket)
                 break
-        except ConnectionResetError as e:
+        except ConnectionResetError:
             close_client(client_socket)
+            break
+        except ConnectionAbortedError:
             break   
             
 def main_loop():
     while True:
-        client_socket, client_ip = server_socket.accept()
-        print(f"Connection from {client_ip}")
-        addresses[client_socket] = client_ip
-        Thread(target=handle_client, args=(client_socket,)).start()
+        try:
+            client_socket, client_ip = server_socket.accept()
+            print_on_console(f"Connection from {client_ip}")
+            addresses[client_socket] = client_ip
+            Thread(target=handle_client, args=(client_socket,)).start()
+        except OSError as e:
+            break
+
+def on_closing():
+    for client_socket in clients:
+        client_socket.send(bytes(r"{quit}", "utf8"))
+        client_socket.close()
+    server_socket.close()
+    window.quit()
+    
+def print_on_console(msg):
+    msg_list.insert(tkt.END, msg)
+    msg_list.yview(tkt.END)
+    #print the message on the console as a backup in case GUI doesn't work
+    print(msg)
 
 clients = {}
 addresses = {}
@@ -56,10 +74,24 @@ buffersize = 1024
 server_socket = socket(AF_INET, SOCK_STREAM)
 server_socket.bind(server_address)
 
+msg_list = None
+
 if __name__ == "__main__":
     server_socket.listen(5)
-    print("Server is listening for connections...")
     server_thread = Thread(target=main_loop)
     server_thread.start()
+    
+    #tkt window
+    window = tkt.Tk()
+    window.title("Server console")
+    window.protocol("WM_DELETE_WINDOW", on_closing)
+    frame = tkt.Frame(window)
+    scrollbar = tkt.Scrollbar(frame)
+    scrollbar.pack(side=tkt.RIGHT, fill=tkt.Y)
+    msg_list = tkt.Listbox(frame, height=15, width=80, yscrollcommand=scrollbar.set)
+    msg_list.pack(side=tkt.LEFT, fill=tkt.BOTH)
+    frame.pack()
+    tkt.mainloop()
     server_thread.join()
     server_socket.close()
+    

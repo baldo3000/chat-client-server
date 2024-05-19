@@ -5,10 +5,18 @@ from threading import Thread
 import tkinter as tkt
 
 def receive():
+    global client_socket
     while True:
         try:
             msg = client_socket.recv(buffersize).decode("utf8")
-            msg_list.insert(tkt.END, msg)
+            print("Receiving message:", msg)
+            if(msg != r"{quit}"):
+                msg_list.insert(tkt.END, msg)
+            else:
+                print("Closing connection")
+                client_socket = None
+                on_closing()
+                break
         except OSError as e:
             break
         
@@ -19,7 +27,7 @@ def send(event=None):
         client_socket.send(bytes(msg, "utf8"))
         if msg == r"{quit}":
             client_socket.close()
-            window.quit()   
+            window.quit()
     else: 
         window.quit()
         
@@ -76,6 +84,8 @@ def connect(server_ip, server_port, username):
         receive_thread.start()
     except Exception as e:
         print("Error connecting to server: ", e)
+        #destroy the unsuccesful socket 
+        client_socket = None
         return
 
 #init
