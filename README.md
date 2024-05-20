@@ -1,2 +1,2 @@
-# chat-client-server
-A simple chat program in python between clients hosted by a server
+# Python Chat
+A simple chat program in Python between clients hosted by a server. See "relazione.pdf" for usage.
